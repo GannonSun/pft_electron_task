@@ -7,7 +7,7 @@ interface IAnyObj {
 }
 
 interface FcResponse<T> {
-  code: string
+  code: string | number
   msg: string
   data: T
 }
