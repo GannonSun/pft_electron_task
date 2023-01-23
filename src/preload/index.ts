@@ -3,7 +3,9 @@ import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
 const api = {
-  openDirectory: () => ipcRenderer.invoke('dialog:openDirectory')
+  openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
+  switchTask: (gits) => ipcRenderer.invoke('task:switchTask', gits),
+  onUpdateSwitchLog: (callback) => ipcRenderer.on('update-switch-log', callback)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

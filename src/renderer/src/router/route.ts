@@ -3,7 +3,7 @@ import { RouteRecordRaw } from 'vue-router'
 export const routers: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/task'
+    redirect: '/login'
   },
   {
     path: '/login',
@@ -11,8 +11,19 @@ export const routers: Array<RouteRecordRaw> = [
     component: () => import('../views/login/index.vue')
   },
   {
+    path: '/signup',
+    name: 'signup',
+    component: () => import('../views/signup/index.vue')
+  },
+  {
     path: '/task',
-    name: 'task',
-    component: () => import('../views/task/index.vue')
+    component: () => import('../components/Layout.vue'),
+    children: [
+      {
+        path: 'home',
+        name: 'task',
+        component: () => import('../views/task/index.vue')
+      }
+    ]
   }
 ]

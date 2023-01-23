@@ -1,5 +1,27 @@
-import { dialog } from 'electron'
-import { exec } from 'child_process'
+import { BrowserWindow, dialog, IpcMainInvokeEvent } from 'electron'
+import { exec, ExecException } from 'child_process'
+
+interface IswitchActionRes {
+  code: number
+  msg: string
+}
+interface IcommandFuncParams {
+  branch: string
+}
+interface IcommandFunc {
+  (gitInfo: IcommandFuncParams): string
+}
+interface IsuccessFunc {
+  (gitIndex: number, commandIndex: number, output: string): void
+}
+interface IfailedFunc {
+  (gitIndex: number, commandIndex: number, command: string): void
+}
+interface Icommand {
+  commandFunc: IcommandFunc
+  successFunc: IsuccessFunc
+  failedFunc?: IfailedFunc
+}
 
 export async function handleDirectoryOpen() {
   const { canceled, filePaths } = await dialog.showOpenDialog({
@@ -12,54 +34,86 @@ export async function handleDirectoryOpen() {
   }
 }
 
-export async function handleSwitchTask(gits) {
+export async function handleSwitchTask(e: IpcMainInvokeEvent, taskGits) {
+  const currentWindow = BrowserWindow.getFocusedWindow()
   // 仓库切换分支的结果
-  let gitsRes = []
+  let switchActionRes: Array<IswitchActionRes> = []
 
-  const gitCommands = [
+  const sendSuccessLog = (log) => {
+    currentWindow?.webContents.send('update-switch-log', {
+      code: 200,
+      msg: log
+    })
+  }
+  const sendFailLog = (log) => {
+    currentWindow?.webContents.send('update-switch-log', {
+      code: 500,
+      msg: log
+    })
+  }
+  const gitCommands: Array<Icommand> = [
     {
-      commandFunc: () => 'git status -s',
-      successFunc: (gitIndex:number, commandIndex:number, output:string) => {
+      commandFunc: () => 'git status -s', // 检测仓库是否有未提交的文件或者有新增的未跟踪的新文件
+      successFunc: (gitIndex, commandIndex, output) => {
         if (!output) {
-          console.log('ceshi')
+          // 无未提交的文件，则执行同仓库的下一个命令 git checkout xxx
+          sendSuccessLog('当前所在分支无需暂存的文件')
           execFunc(gitIndex, ++commandIndex)
         } else {
-          const { name } = gits[gitIndex]
-          gitsRes[gitIndex] = {
-            code: 201,
-            msg: `${name}仓库有未提交的文件，请先前往确认`
-          }
+          // 有未提交的文件，则中断同仓库的后续命令，进行下一个仓库的切换分支操作
+          const { name } = taskGits[gitIndex]
+          sendFailLog(`${name}当前分支有未提交的文件，请先前往确认`)
           checkoutBranch(++gitIndex)
         }
-      },
-      failedFunc: (gitIndex, command) => {
-        gitsRes[gitIndex] = {
-          code: 500,
-          msg: `执行命令有误：${command}`
-        }
-        checkoutBranch(++gitIndex)
       }
     },
     {
       commandFunc: ({ branch }) => `git checkout ${branch}`,
       successFunc: (gitIndex, commandIndex, output) => {
+        // 切换成功说明本地存在分支，直接执行pull
+        execFunc(gitIndex, commandIndex + 2)
+      },
+      failedFunc: (gitIndex, commandIndex, command) => {
+        // 切换失败说明没有本地分支或者远程分支名填写错误，执行git checkout -b xxx手动创建
+        sendFailLog('本地分支不存在，稍后将为您创建...')
+        execFunc(gitIndex, ++commandIndex)
+      }
+    },
+    {
+      commandFunc: ({ branch }) => `git checkout -b ${branch} origin/${branch}`,
+      successFunc: (gitIndex, commandIndex, output) => {
+        sendSuccessLog('成功创建本地分支')
+        execFunc(gitIndex, ++commandIndex)
+      }
+    },
+    {
+      commandFunc: () => 'git pull',
+      successFunc: (gitIndex, commandIndex, output) => {
+        sendSuccessLog('更新成功')
         checkoutBranch(++gitIndex)
       }
     }
   ]
 
   const execFunc = (gitIndex, commandIndex) => {
-    const { path: cwd, branch } = gits[gitIndex]
-    const { commandFunc, successFunc } = gitCommands[commandIndex]
+    const { path: cwd, branch } = taskGits[gitIndex]
+    const { commandFunc, successFunc, failedFunc } = gitCommands[commandIndex]
+    const command = commandFunc({ branch })
+    sendSuccessLog(`执行命令: ${command}`)
     exec(
-      commandFunc({ branch: branch }),
+      command,
       {
         cwd
       },
       (error, stdout, stderr) => {
         if (error) {
           console.error(`exec error: ${error}`)
-          checkoutBranch(++gitIndex)
+          if (failedFunc) {
+            failedFunc(gitIndex, commandIndex, command)
+          } else {
+            sendFailLog(`${error}`)
+            checkoutBranch(++gitIndex)
+          }
           return
         }
         console.log(`stdout: ${stdout}`)
@@ -69,11 +123,13 @@ export async function handleSwitchTask(gits) {
     )
   }
   const checkoutBranch = (gitIndex) => {
-    console.log('gits', gitIndex, gits.length)
-    if (gitIndex === gits.length) {
-      console.log('aaa', gitsRes)
+    console.log('taskGits', gitIndex, taskGits.length)
+    if (gitIndex === taskGits.length) {
+      console.log('aaa', switchActionRes)
       return '结束'
     }
+    const { name } = taskGits[gitIndex]
+    sendSuccessLog(`仓库名: ${name}`)
     return execFunc(gitIndex, 0)
   }
 

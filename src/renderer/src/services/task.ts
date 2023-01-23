@@ -8,6 +8,6 @@ export interface FcResponse<T> {
 
 export type ApiResponse<T> = Promise<[any, FcResponse<T> | undefined]>
 
-export const switchTask = <T = { name: string }>(): ApiResponse<T> => {
-  return Get<T>('/api/task/test', {})
+export const taskList = <T = { name: string }>(): ApiResponse<T> => {
+  return Post<T>('/api/task/taskList', {})
 }

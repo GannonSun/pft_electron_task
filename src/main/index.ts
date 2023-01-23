@@ -51,6 +51,7 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('dialog:openDirectory', handleDirectoryOpen)
+  ipcMain.handle('task:switchTask', handleSwitchTask)
 
   createWindow()
 
