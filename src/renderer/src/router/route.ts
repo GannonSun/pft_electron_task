@@ -16,6 +16,11 @@ export const routers: Array<RouteRecordRaw> = [
     component: () => import('../views/signup/index.vue')
   },
   {
+    path: '/setting',
+    name: 'setting',
+    component: () => import('../views/setting/index.vue')
+  },
+  {
     path: '/task',
     component: () => import('../components/Layout.vue'),
     children: [

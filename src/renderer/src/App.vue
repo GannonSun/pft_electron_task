@@ -1,5 +1,5 @@
 <template>
-  <el-config-provider :z-index="zIndex">
+  <el-config-provider :z-index="3000" :locale="zhCn">
     <router-view v-slot="{ Component }">
       <transition name="fade" mode="out-in">
         <component :is="Component" />
@@ -9,9 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { ElConfigProvider } from 'element-plus'
-
-const zIndex = 3000
+import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 </script>
 
 <style lang="less">
@@ -22,6 +20,11 @@ body {
   width: 100%;
   height: 100%;
   background: #fff;
+}
+
+p {
+  margin: 0;
+  padding: 0;
 }
 
 #app {

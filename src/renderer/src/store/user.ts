@@ -1,18 +1,10 @@
 import { defineStore } from 'pinia'
-
-interface IuserState {
-  userInfo: IuserInfo | null
-}
-
-interface IuserInfo {
-  user_id: number
-  user_name: string
-  pass_word: string
-  head_photo: string
-  status: number
-}
+import { IuserState } from '@renderer/interface/user'
 
 export const useUserStore = defineStore('userStore', {
+  persist: {
+    storage: sessionStorage
+  },
   state: (): IuserState => {
     return {
       userInfo: null
@@ -22,12 +14,15 @@ export const useUserStore = defineStore('userStore', {
     userId: (state: IuserState) => {
       if (!state.userInfo) return ''
       return state.userInfo.user_id
+    },
+    taskId: (state: IuserState) => {
+      if (!state.userInfo) return ''
+      return state.userInfo.task_id
     }
   },
   actions: {
     setUserInfo(params) {
       this.userInfo = params
-      sessionStorage.setItem('userInfo', JSON.stringify(params))
     }
   }
 })

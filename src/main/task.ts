@@ -1,4 +1,4 @@
-import { BrowserWindow, dialog, IpcMainInvokeEvent } from 'electron'
+import { BrowserWindow, dialog, IpcMainInvokeEvent, shell } from 'electron'
 import { exec, ExecException } from 'child_process'
 
 interface IswitchActionRes {
@@ -21,6 +21,10 @@ interface Icommand {
   commandFunc: IcommandFunc
   successFunc: IsuccessFunc
   failedFunc?: IfailedFunc
+}
+
+export async function handleOpenLink(e: IpcMainInvokeEvent, url: string) {
+  shell.openExternal(url)
 }
 
 export async function handleDirectoryOpen() {

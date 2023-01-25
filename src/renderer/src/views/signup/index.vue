@@ -112,6 +112,7 @@ const handleLogin = () => {
     .title {
       font-size: 24px;
       font-weight: bold;
+      margin-bottom: 24px;
     }
     .ruleForm {
       width: 300px;

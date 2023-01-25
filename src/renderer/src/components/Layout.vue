@@ -11,14 +11,16 @@
             </div>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item>个人设置</el-dropdown-item>
+                <el-dropdown-item @click="handleGoSetting">个人设置</el-dropdown-item>
                 <el-dropdown-item @click="handleLogout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
         </div>
       </el-header>
-      <router-view></router-view>
+      <div class="mainContainer">
+        <router-view></router-view>
+      </div>
     </el-container>
   </div>
 </template>
@@ -37,9 +39,13 @@ const firstLetter = computed(() => {
   return userStore.userInfo.user_name.charAt(0)
 })
 
+const handleGoSetting = () => {
+  router.push({
+    name: 'setting'
+  })
+}
 const handleLogout = () => {
   userStore.$reset()
-  sessionStorage.removeItem('userInfo')
   router.push({
     name: 'login'
   })
@@ -48,6 +54,11 @@ const handleLogout = () => {
 
 <style lang="less" scoped>
 .layoutContainer {
+  height: 100%;
+
+  .el-container {
+    height: 100%;
+  }
   .el-header {
     display: flex;
     align-items: center;
@@ -68,6 +79,9 @@ const handleLogout = () => {
         align-items: center;
       }
     }
+  }
+  .mainContainer {
+    height: calc(100% - 60px);
   }
 }
 </style>

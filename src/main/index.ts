@@ -1,7 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { handleDirectoryOpen, handleSwitchTask } from './task'
+import { handleOpenLink, handleDirectoryOpen, handleSwitchTask } from './task'
 import icon from '../../resources/icon.png?asset'
 
 function createWindow(): void {
@@ -50,6 +50,7 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  ipcMain.handle('link:openLink', handleOpenLink)
   ipcMain.handle('dialog:openDirectory', handleDirectoryOpen)
   ipcMain.handle('task:switchTask', handleSwitchTask)
 

@@ -1,4 +1,5 @@
 import { Get, Post } from '../utils/request'
+import { IgitSetting } from '../interface/user'
 
 export interface FcResponse<T> {
   code: string | number
@@ -14,4 +15,12 @@ export const signup = <T = { user_name: string; pass_word: string }>(params): Ap
 
 export const login = <T = { user_name: string; pass_word: string }>(params): ApiResponse<T> => {
   return Post<T>('/api/task/login', params)
+}
+
+export const getSetting = <T = IgitSetting[]>(params): ApiResponse<T> => {
+  return Post<T>('/api/task/getSetting', params)
+}
+
+export const saveSetting = <T>(params): ApiResponse<T> => {
+  return Post<T>('/api/task/saveSetting', params)
 }
