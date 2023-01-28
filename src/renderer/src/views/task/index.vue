@@ -4,10 +4,10 @@
       <div class="filterCom">
         <div class="searchCom">
           <el-input v-model="keyWord" placeholder="输入任务关键词搜索" :prefix-icon="Search" />
-          <el-button type="primary" plain>搜索</el-button>
+          <el-button type="primary" plain @click="handleSeachTask">搜索</el-button>
         </div>
         <div class="switchCom">
-          <el-switch v-model="onlyMe" size="small"></el-switch>
+          <el-switch v-model="onlyMe" size="small" @change="handleShowMyTask"></el-switch>
           <span :class="{ activeText: onlyMe }">仅显示我的任务</span>
         </div>
       </div>
@@ -43,11 +43,23 @@
       </div>
     </el-aside>
     <el-main class="mainContainer">
-      <template v-if="activeTaskId">
-        <div class="mainHeader">
-          <div class="headerTitle">{{}}</div>
+      <div v-if="taskDetailed" class="taskMain">
+        <div class="taskAction">
+          <el-button type="primary" @click="handleSwitchTask">切换</el-button>
+          <el-button :disabled="!isOwner" @click="handleEditTask">编辑</el-button>
+          <el-button :disabled="!isOwner" type="danger" @click="handleDelTask">删除</el-button>
         </div>
-      </template>
+        <div class="taskHeader">
+          <p class="taskTitle">{{ taskDetailed.task_name }}</p>
+          <p v-if="taskDetailed.remark" class="taskRemark">备注：{{ taskDetailed.remark }}</p>
+        </div>
+        <div class="taskRelated">
+          <div class="relatedItem" v-for="item in taskDetailed.task_related">
+            <p>仓库名：{{ item.git_name }}</p>
+            <p>分支名：{{ item.branch_name }}</p>
+          </div>
+        </div>
+      </div>
       <div v-else class="emptyMain">
         <el-empty description="暂无任务数据" />
       </div>
@@ -56,17 +68,18 @@
   <task-dialog
     v-model="taskDialogVisible"
     :action-type="actionType"
+    :task-info="taskDetailed"
     @refresh="handleGetTaskList"
   ></task-dialog>
 </template>
 
 <script setup lang="ts">
-import { reactive, onMounted, ref } from 'vue'
-import { ElSwitch } from 'element-plus'
+import { reactive, onMounted, ref, computed } from 'vue'
+import { ElMessage, ElMessageBox, ElSwitch } from 'element-plus'
 import { Search, Flag, Plus } from '@element-plus/icons-vue'
 import { useUserStore } from '@renderer/store/user'
 import { ItaskItem } from '@renderer/interface/task'
-import { getTaskList, getTaskDetailed } from '@renderer/services/task'
+import { getTaskList, getTaskDetailed, delTask, switchTask } from '@renderer/services/task'
 import TaskDialog from './components/taskDialog.vue'
 
 const userStore = useUserStore()
@@ -75,24 +88,46 @@ onMounted(async () => {
   handleGetTaskList()
 })
 
+let page = ref<number>(1)
 let keyWord = ref<string>('')
 let onlyMe = ref<boolean>(false)
 let taskList = ref<ItaskItem[]>([])
-let activeTaskId = ref<number>()
+let activeTaskId = ref<number | null>(null)
 let taskDetailed = ref(null)
 let taskDialogVisible = ref<boolean>(false)
 let actionType = ref<'add' | 'edit' | ''>('')
 const logsArr = reactive([])
+
+const isOwner = computed(() => {
+  return taskDetailed.value?.user_id == userStore.userId
+})
 
 window.electronAPI.onUpdateSwitchLog((e, logVal) => {
   console.log('log', logVal)
   logsArr.push(logVal)
 })
 
-const handleGetTaskList = async () => {
-  const [err, res] = await getTaskList()
+const handleGetTaskList = async (searchParams = {}) => {
+  const [err, res] = await getTaskList({
+    page: page.value,
+    key_word: keyWord.value,
+    ...searchParams
+  })
   if (!err && res?.code == 200) {
     taskList.value = res.data
+  }
+}
+const handleSeachTask = () => {
+  page.value = 1
+  handleGetTaskList()
+}
+const handleShowMyTask = (val) => {
+  if (val) {
+    handleGetTaskList({
+      user_id: userStore.userId
+    })
+  } else {
+    handleGetTaskList()
   }
 }
 const handleClickTask = async (task) => {
@@ -102,9 +137,49 @@ const handleClickTask = async (task) => {
     taskDetailed.value = res.data
   }
 }
+const handleSwitchTask = () => {
+  ElMessageBox.confirm('您确定要切换该任务？', '温馨提示', {
+    type: 'warning',
+    closeOnClickModal: false
+  })
+    .then(async () => {
+      const [err, res] = await switchTask({
+        user_id: userStore.userId,
+        task_id: taskDetailed.value?.task_id
+      })
+      if (!err && res?.code == 200) {
+        userStore.setUserInfo(res.data?.user_info ?? null)
+        const switchRes = await window.electronAPI.switchTask(res.data?.task_gits ?? [])
+        console.log(switchRes)
+      }
+    })
+    .catch((e) => e)
+}
 const handleAddTask = () => {
   actionType.value = 'add'
   taskDialogVisible.value = true
+}
+const handleEditTask = () => {
+  actionType.value = 'edit'
+  taskDialogVisible.value = true
+}
+const handleDelTask = () => {
+  ElMessageBox.confirm('您确定要删除该任务？', '温馨提示', {
+    type: 'warning',
+    closeOnClickModal: false
+  })
+    .then(async () => {
+      const [err, res] = await delTask({
+        id: activeTaskId.value
+      })
+      if (!err && res?.code == 200) {
+        ElMessage.success('删除成功')
+        activeTaskId.value = null
+        taskDetailed.value = null
+        handleGetTaskList()
+      }
+    })
+    .catch((e) => e)
 }
 // const handleSwitchTask = async () => {
 //   const [err, res] = await switchTask()
@@ -173,6 +248,7 @@ const handleAddTask = () => {
             text-overflow: ellipsis;
             display: -webkit-box;
             -webkit-box-orient: vertical;
+            margin-bottom: 8px;
           }
           .subTitle {
             font-size: 14px;
@@ -181,14 +257,20 @@ const handleAddTask = () => {
         }
       }
       .activeTaskItem {
-        background: #e2ecff;
+        background: var(--el-color-primary-light-7);
 
         &:hover {
-          background: #e2ecff;
+          background: var(--el-color-primary-light-7);
         }
       }
-      .usingTaskItem {
-      }
+    }
+    .emptyContainer {
+      width: 100%;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--el-text-color-secondary);
     }
     .actionCom {
       position: absolute;
@@ -196,7 +278,7 @@ const handleAddTask = () => {
       display: flex;
       align-items: center;
       height: 40px;
-      width: 100%;
+      width: calc(100% - 24px);
       border-top: 2px solid #ccc;
       font-size: 16px;
       font-weight: bold;
@@ -206,6 +288,35 @@ const handleAddTask = () => {
   .mainContainer {
     background: #fff;
 
+    .taskMain {
+      .taskAction {
+        text-align: right;
+        margin-bottom: 12px;
+      }
+      .taskHeader {
+        border-bottom: 2px solid #ccc;
+        padding-bottom: 12px;
+        margin-bottom: 24px;
+
+        .taskTitle {
+          font-size: 24px;
+          font-weight: bold;
+        }
+        .taskRemark {
+          font-size: 14px;
+          color: #969696;
+          margin-top: 12px;
+        }
+      }
+      .taskRelated {
+        .relatedItem {
+          background: var(--el-color-success-light-9);
+          padding: 24px;
+          border-radius: 12px;
+          margin-bottom: 12px;
+        }
+      }
+    }
     .emptyMain {
       width: 100%;
       height: 100%;

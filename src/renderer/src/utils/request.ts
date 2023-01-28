@@ -67,7 +67,6 @@ const handleNetworkError = (errStatus?: number): void => {
     // message.error(networkErrMap[errStatus] ?? `其他连接错误 --${errStatus}`)
     return
   }
-
   //   message.error('无法连接到服务器！')
 }
 
@@ -96,8 +95,10 @@ axios.interceptors.response.use(
     return response
   },
   (err) => {
-    loadingInstance && loadingInstance.close()
-    loadingInstance = null
+    needLoadingRequestCount--
+    if (needLoadingRequestCount === 0) {
+      loadingInstance && loadingInstance.close()
+    }
     handleNetworkError(err.response.status)
     Promise.reject(err.response)
   }

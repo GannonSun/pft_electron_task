@@ -8,10 +8,10 @@
           <el-input v-model="ruleForm.user_name" placeholder="请输入用户名" />
         </el-form-item>
         <el-form-item prop="pass_word">
-          <el-input v-model="ruleForm.pass_word" placeholder="请输入密码" />
+          <el-input v-model="ruleForm.pass_word" show-password placeholder="请输入密码" />
         </el-form-item>
         <el-form-item prop="pass_word_valid">
-          <el-input v-model="ruleForm.pass_word_valid" placeholder="请再次输入密码" />
+          <el-input v-model="ruleForm.pass_word_valid" show-password placeholder="请再次输入密码" />
         </el-form-item>
       </el-form>
       <el-button class="signupBtn" type="primary" round size="large" @click="handleSignup">

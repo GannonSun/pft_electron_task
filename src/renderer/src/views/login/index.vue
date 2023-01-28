@@ -5,10 +5,19 @@
       <p class="title">任务管理</p>
       <el-form ref="ruleFormRef" :model="ruleForm" :rules="rules" class="ruleForm" status-icon>
         <el-form-item prop="user_name">
-          <el-input v-model="ruleForm.user_name" placeholder="请输入用户名" />
+          <el-input
+            v-model="ruleForm.user_name"
+            placeholder="请输入用户名"
+            @keyup.enter="handleLogin"
+          />
         </el-form-item>
         <el-form-item prop="pass_word">
-          <el-input v-model="ruleForm.pass_word" placeholder="请输入密码" />
+          <el-input
+            v-model="ruleForm.pass_word"
+            show-password
+            placeholder="请输入密码"
+            @keyup.enter="handleLogin"
+          />
         </el-form-item>
       </el-form>
       <el-button class="loginBtn" type="primary" round size="large" @click="handleLogin">
@@ -39,28 +48,27 @@ const ruleForm = reactive({
 })
 const rules = reactive({})
 
-const handleLogin = () => {
-  if (!ruleFormRef.value) return
-  ruleFormRef.value.validate(async (valid) => {
-    if (valid) {
-      const [err, res] = await login({
-        user_name: ruleForm.user_name,
-        pass_word: ruleForm.pass_word
-      })
-      if (!err && res.code == 200) {
-        ElMessage({
-          type: 'success',
-          message: '登录成功'
-        })
-        userStore.setUserInfo(res.data)
-        setTimeout(() => {
-          router.push({
-            name: 'task'
-          })
-        }, 1000)
-      }
-    }
+const handleLogin = async () => {
+  if (!ruleForm.user_name || !ruleForm.pass_word) {
+    ElMessage.warning('请输入用户名和密码')
+    return
+  }
+  const [err, res] = await login({
+    user_name: ruleForm.user_name,
+    pass_word: ruleForm.pass_word
   })
+  if (!err && res.code == 200) {
+    ElMessage({
+      type: 'success',
+      message: '登录成功'
+    })
+    userStore.setUserInfo(res.data)
+    setTimeout(() => {
+      router.push({
+        name: 'task'
+      })
+    }, 1000)
+  }
 }
 
 const handleSignup = () => {

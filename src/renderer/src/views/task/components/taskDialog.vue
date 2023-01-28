@@ -66,12 +66,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, onMounted } from 'vue'
+import { computed, watch, reactive, ref, onMounted } from 'vue'
 import { ElMessage, FormInstance, FormRules } from 'element-plus'
 import { Plus, Minus } from '@element-plus/icons-vue'
 import { useUserStore } from '@renderer/store/user'
 import { getGitList } from '@renderer/services/git'
-import { addTask } from '@renderer/services/task'
+import { addTask, updateTask } from '@renderer/services/task'
 import { IgitList } from '@renderer/interface/git'
 
 const props = defineProps({
@@ -82,7 +82,8 @@ const props = defineProps({
   actionType: {
     type: String,
     default: 'add'
-  }
+  },
+  taskInfo: Object
 })
 const emit = defineEmits(['update:modelValue', 'refresh'])
 
@@ -120,6 +121,28 @@ const dialogTitle = computed(() => {
   return typeMap[props.actionType]
 })
 
+watch(
+  visible,
+  (newVal, oldVal) => {
+    if (newVal) {
+      if (props.actionType === 'edit' && props.taskInfo) {
+        ruleForm.task_name = props.taskInfo.task_name
+        ruleForm.task_related = props.taskInfo.task_related
+        ruleForm.remark = props.taskInfo.remark
+      }
+    } else {
+      ruleFormRef && ruleFormRef.value.resetFields()
+      ruleForm.task_related = [
+        {
+          git_id: '',
+          branch_name: ''
+        }
+      ]
+    }
+  },
+  { deep: true }
+)
+
 onMounted(() => {
   handleGetGitList()
 })
@@ -140,13 +163,6 @@ const handleDelRelated = (index) => {
   ruleForm.task_related.splice(index, 1)
 }
 const handleCancel = (needRefresh: boolean = false) => {
-  ruleFormRef && ruleFormRef.value.resetFields()
-  ruleForm.task_related = [
-    {
-      git_id: '',
-      branch_name: ''
-    }
-  ]
   visible.value = false
   needRefresh && emit('refresh')
 }
@@ -172,6 +188,16 @@ const handleSave = () => {
           handleCancel(true)
         }
       } else {
+        // 编辑
+        const [err, res] = await updateTask({
+          ...ruleForm,
+          user_id: userStore.userId,
+          task_id: props.taskInfo?.task_id
+        })
+        if (!err && res?.code == 200) {
+          ElMessage.success('更新成功')
+          handleCancel(true)
+        }
       }
     }
   })

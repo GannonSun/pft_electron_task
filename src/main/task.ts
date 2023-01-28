@@ -100,7 +100,12 @@ export async function handleSwitchTask(e: IpcMainInvokeEvent, taskGits) {
   ]
 
   const execFunc = (gitIndex, commandIndex) => {
-    const { path: cwd, branch } = taskGits[gitIndex]
+    const { local_path: cwd, branch_name: branch, name } = taskGits[gitIndex]
+    if (!cwd) {
+      sendFailLog(`请先前往个人设置设置${name}的本地路径`)
+      checkoutBranch(++gitIndex)
+      return
+    }
     const { commandFunc, successFunc, failedFunc } = gitCommands[commandIndex]
     const command = commandFunc({ branch })
     sendSuccessLog(`执行命令: ${command}`)
