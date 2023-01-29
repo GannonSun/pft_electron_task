@@ -11,7 +11,12 @@
           <span :class="{ activeText: onlyMe }">仅显示我的任务</span>
         </div>
       </div>
-      <div v-if="taskList.length" class="listContainer">
+      <div
+        class="listContainer"
+        v-infinite-scroll="handleChangePage"
+        :infinite-scroll-delay="500"
+        :infinite-scroll-disabled="finished"
+      >
         <div
           class="taskItem"
           :class="{
@@ -29,8 +34,8 @@
             <el-icon color="#e6a23c" size="20"><Flag /></el-icon>
           </div>
         </div>
+        <div v-if="!taskList.length" class="emptyContainer">暂无数据</div>
       </div>
-      <div v-else class="emptyContainer">暂无数据</div>
       <div class="actionCom">
         <el-button
           type="warning"
@@ -69,13 +74,13 @@
     v-model="taskDialogVisible"
     :action-type="actionType"
     :task-info="taskDetailed"
-    @refresh="handleGetTaskList"
+    @refresh="handleSeachTask"
   ></task-dialog>
   <logs-dialog v-model="logsDialogVisible"> </logs-dialog>
 </template>
 
 <script setup lang="ts">
-import { reactive, onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { ElMessage, ElMessageBox, ElSwitch } from 'element-plus'
 import { Search, Flag, Plus } from '@element-plus/icons-vue'
 import { useUserStore } from '@renderer/store/user'
@@ -94,22 +99,21 @@ let page = ref<number>(1)
 let keyWord = ref<string>('')
 let onlyMe = ref<boolean>(false)
 let taskList = ref<ItaskItem[]>([])
+let finished = ref<boolean>(false)
 let activeTaskId = ref<number | null>(null)
 let taskDetailed = ref(null)
 let taskDialogVisible = ref<boolean>(false)
 let logsDialogVisible = ref<boolean>(false)
 let actionType = ref<'add' | 'edit' | ''>('')
-const logsArr = reactive([])
 
 const isOwner = computed(() => {
   return taskDetailed.value?.user_id == userStore.userId
 })
 
-// window.electronAPI.onUpdateSwitchLog((e, logVal) => {
-//   console.log('log', logVal)
-//   logsArr.push(logVal)
-// })
-
+const handleChangePage = () => {
+  page.value += 1
+  handleGetTaskList()
+}
 const handleGetTaskList = async (searchParams = {}) => {
   const [err, res] = await getTaskList({
     page: page.value,
@@ -117,14 +121,24 @@ const handleGetTaskList = async (searchParams = {}) => {
     ...searchParams
   })
   if (!err && res?.code == 200) {
-    taskList.value = res.data
+    if (page.value === 1) {
+      taskList.value = res.data
+    } else {
+      taskList.value.push(...res.data)
+    }
+    if (!res.data.length) {
+      finished.value = true
+    }
   }
 }
 const handleSeachTask = () => {
   page.value = 1
+  finished.value = false
   handleGetTaskList()
 }
 const handleShowMyTask = (val) => {
+  page.value = 1
+  finished.value = false
   if (val) {
     handleGetTaskList({
       user_id: userStore.userId
@@ -184,15 +198,6 @@ const handleDelTask = () => {
     })
     .catch((e) => e)
 }
-// const handleSwitchTask = async () => {
-//   const [err, res] = await switchTask()
-//   console.log(err, res)
-//   if (!err && res.code == 200) {
-//     const data: any = res.data
-//     const switchRes = await window.electronAPI.switchTask(data.gits)
-//     console.log(switchRes)
-//   }
-// }
 </script>
 
 <style lang="less" scoped>
@@ -228,6 +233,9 @@ const handleDelTask = () => {
       }
     }
     .listContainer {
+      height: calc(100% - 100px - 42px);
+      overflow-y: auto;
+
       .taskItem {
         padding: 12px 24px;
         min-height: 40px;
