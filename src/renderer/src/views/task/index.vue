@@ -71,6 +71,7 @@
     :task-info="taskDetailed"
     @refresh="handleGetTaskList"
   ></task-dialog>
+  <logs-dialog v-model="logsDialogVisible"> </logs-dialog>
 </template>
 
 <script setup lang="ts">
@@ -81,6 +82,7 @@ import { useUserStore } from '@renderer/store/user'
 import { ItaskItem } from '@renderer/interface/task'
 import { getTaskList, getTaskDetailed, delTask, switchTask } from '@renderer/services/task'
 import TaskDialog from './components/taskDialog.vue'
+import LogsDialog from './components/logsDialog.vue'
 
 const userStore = useUserStore()
 
@@ -95,6 +97,7 @@ let taskList = ref<ItaskItem[]>([])
 let activeTaskId = ref<number | null>(null)
 let taskDetailed = ref(null)
 let taskDialogVisible = ref<boolean>(false)
+let logsDialogVisible = ref<boolean>(false)
 let actionType = ref<'add' | 'edit' | ''>('')
 const logsArr = reactive([])
 
@@ -102,10 +105,10 @@ const isOwner = computed(() => {
   return taskDetailed.value?.user_id == userStore.userId
 })
 
-window.electronAPI.onUpdateSwitchLog((e, logVal) => {
-  console.log('log', logVal)
-  logsArr.push(logVal)
-})
+// window.electronAPI.onUpdateSwitchLog((e, logVal) => {
+//   console.log('log', logVal)
+//   logsArr.push(logVal)
+// })
 
 const handleGetTaskList = async (searchParams = {}) => {
   const [err, res] = await getTaskList({
@@ -148,9 +151,9 @@ const handleSwitchTask = () => {
         task_id: taskDetailed.value?.task_id
       })
       if (!err && res?.code == 200) {
+        logsDialogVisible.value = true
         userStore.setUserInfo(res.data?.user_info ?? null)
-        const switchRes = await window.electronAPI.switchTask(res.data?.task_gits ?? [])
-        console.log(switchRes)
+        window.electronAPI.switchTask(res.data?.task_gits ?? [])
       }
     })
     .catch((e) => e)
@@ -309,11 +312,16 @@ const handleDelTask = () => {
         }
       }
       .taskRelated {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+
         .relatedItem {
+          width: 100%;
+          // width: calc((100% - 32px * 2 - 12px) / 2);
           background: var(--el-color-success-light-9);
-          padding: 24px;
+          padding: 16px;
           border-radius: 12px;
-          margin-bottom: 12px;
         }
       }
     }

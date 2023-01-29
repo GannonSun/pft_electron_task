@@ -55,6 +55,13 @@ export async function handleSwitchTask(_e: IpcMainInvokeEvent, taskGits) {
       msg: log
     })
   }
+  const sendProcessLog = (current, total) => {
+    currentWindow?.webContents.send('update-switch-log', {
+      code: 0,
+      current,
+      total
+    })
+  }
   const gitCommands: Array<Icommand> = [
     {
       commandFunc: () => 'git status -s', // 检测仓库是否有未提交的文件或者有新增的未跟踪的新文件
@@ -133,11 +140,13 @@ export async function handleSwitchTask(_e: IpcMainInvokeEvent, taskGits) {
   }
   const checkoutBranch = (gitIndex) => {
     console.log('taskGits', gitIndex, taskGits.length)
+    sendProcessLog(gitIndex, taskGits.length)
     if (gitIndex === taskGits.length) {
       console.log('aaa', switchActionRes)
       return '结束'
     }
     const { git_name: name } = taskGits[gitIndex]
+    gitIndex > 0 && sendSuccessLog('\n')
     sendSuccessLog(`仓库名: ${name}`)
     return execFunc(gitIndex, 0)
   }
