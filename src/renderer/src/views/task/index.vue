@@ -54,7 +54,7 @@
           <p v-if="taskDetailed.remark" class="taskRemark">备注：{{ taskDetailed.remark }}</p>
         </div>
         <div class="taskRelated">
-          <div class="relatedItem" v-for="item in taskDetailed.task_related">
+          <div class="relatedItem" v-for="item in taskDetailed.task_related" :key="item.git_id">
             <p>仓库名：{{ item.git_name }}</p>
             <p>分支名：{{ item.branch_name }}</p>
           </div>

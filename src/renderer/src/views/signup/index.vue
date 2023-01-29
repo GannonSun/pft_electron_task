@@ -34,7 +34,7 @@ import { signup } from '../../services/user'
 const router = useRouter()
 const ruleFormRef = ref<FormInstance>()
 
-const validatePass = (rule: any, value: any, callback: any) => {
+const validatePass = (_rule: any, value: any, callback: any) => {
   if (value === '') {
     callback(new Error('请输入密码'))
   } else {
@@ -45,7 +45,7 @@ const validatePass = (rule: any, value: any, callback: any) => {
     callback()
   }
 }
-const validatePass2 = (rule: any, value: any, callback: any) => {
+const validatePass2 = (_rule: any, value: any, callback: any) => {
   if (value === '') {
     callback(new Error('请再次输入密码'))
   } else if (value !== ruleForm.pass_word) {

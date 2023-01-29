@@ -1,5 +1,5 @@
 import { BrowserWindow, dialog, IpcMainInvokeEvent, shell } from 'electron'
-import { exec, ExecException } from 'child_process'
+import { exec } from 'child_process'
 
 interface IswitchActionRes {
   code: number
@@ -23,7 +23,7 @@ interface Icommand {
   failedFunc?: IfailedFunc
 }
 
-export async function handleOpenLink(e: IpcMainInvokeEvent, url: string) {
+export async function handleOpenLink(_e: IpcMainInvokeEvent, url: string) {
   shell.openExternal(url)
 }
 
@@ -38,7 +38,7 @@ export async function handleDirectoryOpen() {
   }
 }
 
-export async function handleSwitchTask(e: IpcMainInvokeEvent, taskGits) {
+export async function handleSwitchTask(_e: IpcMainInvokeEvent, taskGits) {
   const currentWindow = BrowserWindow.getFocusedWindow()
   // 仓库切换分支的结果
   let switchActionRes: Array<IswitchActionRes> = []
@@ -65,7 +65,7 @@ export async function handleSwitchTask(e: IpcMainInvokeEvent, taskGits) {
           execFunc(gitIndex, ++commandIndex)
         } else {
           // 有未提交的文件，则中断同仓库的后续命令，进行下一个仓库的切换分支操作
-          const { name } = taskGits[gitIndex]
+          const { git_name: name } = taskGits[gitIndex]
           sendFailLog(`${name}当前分支有未提交的文件，请先前往确认`)
           checkoutBranch(++gitIndex)
         }
@@ -73,11 +73,11 @@ export async function handleSwitchTask(e: IpcMainInvokeEvent, taskGits) {
     },
     {
       commandFunc: ({ branch }) => `git checkout ${branch}`,
-      successFunc: (gitIndex, commandIndex, output) => {
+      successFunc: (gitIndex, commandIndex) => {
         // 切换成功说明本地存在分支，直接执行pull
         execFunc(gitIndex, commandIndex + 2)
       },
-      failedFunc: (gitIndex, commandIndex, command) => {
+      failedFunc: (gitIndex, commandIndex) => {
         // 切换失败说明没有本地分支或者远程分支名填写错误，执行git checkout -b xxx手动创建
         sendFailLog('本地分支不存在，稍后将为您创建...')
         execFunc(gitIndex, ++commandIndex)
@@ -85,14 +85,14 @@ export async function handleSwitchTask(e: IpcMainInvokeEvent, taskGits) {
     },
     {
       commandFunc: ({ branch }) => `git checkout -b ${branch} origin/${branch}`,
-      successFunc: (gitIndex, commandIndex, output) => {
+      successFunc: (gitIndex, commandIndex) => {
         sendSuccessLog('成功创建本地分支')
         execFunc(gitIndex, ++commandIndex)
       }
     },
     {
       commandFunc: () => 'git pull',
-      successFunc: (gitIndex, commandIndex, output) => {
+      successFunc: (gitIndex) => {
         sendSuccessLog('更新成功')
         checkoutBranch(++gitIndex)
       }
@@ -100,7 +100,7 @@ export async function handleSwitchTask(e: IpcMainInvokeEvent, taskGits) {
   ]
 
   const execFunc = (gitIndex, commandIndex) => {
-    const { local_path: cwd, branch_name: branch, name } = taskGits[gitIndex]
+    const { local_path: cwd, branch_name: branch, git_name: name } = taskGits[gitIndex]
     if (!cwd) {
       sendFailLog(`请先前往个人设置设置${name}的本地路径`)
       checkoutBranch(++gitIndex)
@@ -137,7 +137,7 @@ export async function handleSwitchTask(e: IpcMainInvokeEvent, taskGits) {
       console.log('aaa', switchActionRes)
       return '结束'
     }
-    const { name } = taskGits[gitIndex]
+    const { git_name: name } = taskGits[gitIndex]
     sendSuccessLog(`仓库名: ${name}`)
     return execFunc(gitIndex, 0)
   }

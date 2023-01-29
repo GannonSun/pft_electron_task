@@ -57,7 +57,7 @@ const handleLogin = async () => {
     user_name: ruleForm.user_name,
     pass_word: ruleForm.pass_word
   })
-  if (!err && res.code == 200) {
+  if (!err && res?.code == 200) {
     ElMessage({
       type: 'success',
       message: '登录成功'
