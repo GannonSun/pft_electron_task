@@ -55,6 +55,12 @@
           placeholder="自定义备注，可填入Tapd链接"
         />
       </el-form-item>
+      <el-form-item v-if="actionType === 'add'" label="是否自动创建分支" prop="auto_checkout">
+        <el-radio-group v-model="ruleForm.auto_checkout" class="ml-4">
+          <el-radio :label="1">是</el-radio>
+          <el-radio :label="0">否</el-radio>
+        </el-radio-group>
+      </el-form-item>
     </el-form>
     <template #footer>
       <div class="dialogFooter">
@@ -63,6 +69,7 @@
       </div>
     </template>
   </el-dialog>
+  <logs-dialog v-model="logsDialogVisible"></logs-dialog>
 </template>
 
 <script setup lang="ts">
@@ -73,6 +80,7 @@ import { useUserStore } from '@renderer/store/user'
 import { getGitList } from '@renderer/services/git'
 import { addTask, updateTask } from '@renderer/services/task'
 import { IgitList } from '@renderer/interface/git'
+import LogsDialog from './logsDialog.vue'
 
 const props = defineProps({
   modelValue: {
@@ -98,11 +106,13 @@ const ruleForm = reactive({
       branch_name: ''
     }
   ],
-  remark: ''
+  remark: '',
+  auto_checkout: 0 // 1 是 0 否
 })
 const rules = reactive<FormRules>({
   task_name: [{ required: true, message: '请输入任务名称', trigger: 'blur' }]
 })
+let logsDialogVisible = ref<boolean>(false)
 let gitList = ref<IgitList[]>([])
 
 const visible = computed({
@@ -186,6 +196,10 @@ const handleSave = () => {
         if (!err && res.code == 200) {
           ElMessage.success('新增成功')
           handleCancel(true)
+          if (ruleForm.auto_checkout) {
+            logsDialogVisible.value = true
+            window.electronAPI.operateGit(res.data, 'created')
+          }
         }
       } else {
         // 编辑

@@ -31,8 +31,8 @@ export default defineConfig({
       proxy: {
         '/api': {
           //要访问的跨域的域名
-          // target: 'http://118.25.4.192:7002', //线上环境
-          target: 'http://localhost:7002', //本地环境
+          target: 'http://118.25.4.192:7003', //线上环境
+          // target: 'http://localhost:7003', //本地环境
           changeOrigin: true, //开启代理
           rewrite: (path) => path.replace(/^\/api/, '')
         }

@@ -55,7 +55,12 @@
           <el-button :disabled="!isOwner" type="danger" @click="handleDelTask">删除</el-button>
         </div>
         <div class="taskHeader">
-          <p class="taskTitle">{{ taskDetailed.task_name }}</p>
+          <p class="taskTitle">
+            <span>{{ taskDetailed.task_name }}</span>
+            <el-icon class="copyIcon" title="复制任务分支信息" @click="handleCopyTaskInfo"
+              ><CopyDocument
+            /></el-icon>
+          </p>
           <p v-if="taskDetailed.remark" class="taskRemark">备注：{{ taskDetailed.remark }}</p>
         </div>
         <div class="taskRelated">
@@ -76,13 +81,13 @@
     :task-info="taskDetailed"
     @refresh="handleSeachTask"
   ></task-dialog>
-  <logs-dialog v-model="logsDialogVisible"> </logs-dialog>
+  <logs-dialog v-model="logsDialogVisible"></logs-dialog>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
 import { ElMessage, ElMessageBox, ElSwitch } from 'element-plus'
-import { Search, Flag, Plus } from '@element-plus/icons-vue'
+import { Search, Flag, Plus, CopyDocument } from '@element-plus/icons-vue'
 import { useUserStore } from '@renderer/store/user'
 import { ItaskItem } from '@renderer/interface/task'
 import { getTaskList, getTaskDetailed, delTask, switchTask } from '@renderer/services/task'
@@ -126,7 +131,7 @@ const handleGetTaskList = async (searchParams = {}) => {
     } else {
       taskList.value.push(...res.data)
     }
-    if (!res.data.length) {
+    if (!res.data.length || res.data.length < 20) {
       finished.value = true
     }
   }
@@ -198,6 +203,13 @@ const handleDelTask = () => {
     })
     .catch((e) => e)
 }
+const handleCopyTaskInfo = () => {
+  const copyStr = taskDetailed.value.task_related
+    .map((g) => `${g.git_name}：${g.branch_name}`)
+    .join('\n')
+  navigator.clipboard.writeText(copyStr)
+  ElMessage.success('复制成功')
+}
 </script>
 
 <style lang="less" scoped>
@@ -233,7 +245,7 @@ const handleDelTask = () => {
       }
     }
     .listContainer {
-      height: calc(100% - 100px - 42px);
+      height: calc(100% - 100px - 50px);
       overflow-y: auto;
 
       .taskItem {
@@ -288,9 +300,9 @@ const handleDelTask = () => {
       bottom: 0;
       display: flex;
       align-items: center;
-      height: 40px;
+      height: 50px;
       width: calc(100% - 24px);
-      border-top: 2px solid #ccc;
+      box-shadow: 0px -3px 8px 0px #ccc;
       font-size: 16px;
       font-weight: bold;
       padding: 0px 12px;
@@ -312,6 +324,13 @@ const handleDelTask = () => {
         .taskTitle {
           font-size: 24px;
           font-weight: bold;
+
+          .copyIcon {
+            color: var(--el-color-primary);
+            font-size: 18px;
+            cursor: pointer;
+            margin-left: 12px;
+          }
         }
         .taskRemark {
           font-size: 14px;

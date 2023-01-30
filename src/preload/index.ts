@@ -5,6 +5,7 @@ import { electronAPI } from '@electron-toolkit/preload'
 const api = {
   openLink: (url) => ipcRenderer.invoke('link:openLink', url),
   openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
+  operateGit: (gits, action) => ipcRenderer.invoke('task:operateGit', gits, action),
   switchTask: (gits) => ipcRenderer.invoke('task:switchTask', gits),
   onUpdateSwitchLog: (callback) => ipcRenderer.on('update-switch-log', callback)
 }

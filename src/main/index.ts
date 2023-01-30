@@ -1,8 +1,8 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { handleOpenLink, handleDirectoryOpen, handleSwitchTask } from './task'
-import icon from '../../resources/icon.png?asset'
+import { handleOpenLink, handleDirectoryOpen, handleOperateGit, handleSwitchTask } from './task'
+import icon from '../../resources/task.ico?asset'
 
 function createWindow(): void {
   // Create the browser window.
@@ -11,7 +11,7 @@ function createWindow(): void {
     height: 670,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    icon,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
@@ -26,6 +26,15 @@ function createWindow(): void {
     shell.openExternal(details.url)
     return { action: 'deny' }
   })
+
+  // globalShortcut.register('CommandOrControl+F12', () => {
+  //   if (mainWindow.webContents.isDevToolsOpened()) {
+  //     mainWindow.webContents.closeDevTools()
+  //   } else {
+  //     mainWindow.webContents.openDevTools({ mode: 'right' })
+  //     console.log('Open dev tool...')
+  //   }
+  // })
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
@@ -52,6 +61,7 @@ app.whenReady().then(() => {
 
   ipcMain.handle('link:openLink', handleOpenLink)
   ipcMain.handle('dialog:openDirectory', handleDirectoryOpen)
+  ipcMain.handle('task:operateGit', handleOperateGit)
   ipcMain.handle('task:switchTask', handleSwitchTask)
 
   createWindow()

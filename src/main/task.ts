@@ -38,6 +38,112 @@ export async function handleDirectoryOpen() {
   }
 }
 
+export async function handleOperateGit(_e: IpcMainInvokeEvent, taskGits, action) {
+  const currentWindow = BrowserWindow.getFocusedWindow()
+  // 仓库切换分支的结果
+  let switchActionRes: Array<IswitchActionRes> = []
+
+  const sendSuccessLog = (log) => {
+    currentWindow?.webContents.send('update-switch-log', {
+      code: 200,
+      msg: log
+    })
+  }
+  const sendFailLog = (log) => {
+    currentWindow?.webContents.send('update-switch-log', {
+      code: 500,
+      msg: log
+    })
+  }
+  const sendProcessLog = (current, total) => {
+    currentWindow?.webContents.send('update-switch-log', {
+      code: 0,
+      current,
+      total
+    })
+  }
+
+  // 创建任务自动创建切换分支操作
+  const createdCommands: Array<Icommand> = [
+    {
+      commandFunc: () => 'git status -s', // 检测仓库是否有未提交的文件或者有新增的未跟踪的新文件
+      successFunc: (gitIndex, commandIndex, output) => {
+        if (!output) {
+          // 无未提交的文件，则执行同仓库的下一个命令 git checkout xxx
+          sendSuccessLog('当前所在分支无需暂存的文件')
+          execFunc(gitIndex, ++commandIndex)
+        } else {
+          // 有未提交的文件，则中断同仓库的后续命令，进行下一个仓库的切换分支操作
+          const { git_name: name } = taskGits[gitIndex]
+          sendFailLog(`${name}当前分支有未提交的文件，请先前往确认`)
+          checkoutBranch(++gitIndex)
+        }
+      }
+    },
+    {
+      commandFunc: ({ branch }) => `git checkout -b ${branch}`,
+      successFunc: (gitIndex) => {
+        // 创建成功
+        sendSuccessLog('自动创建分支成功，并已切换到该分支')
+        checkoutBranch(++gitIndex)
+      }
+    }
+  ]
+  // 字典
+  const gitCommandsMap = {
+    created: createdCommands
+  }
+  // 根据action类型选择对应的shell操作
+  const gitCommands = gitCommandsMap[action] || []
+
+  const execFunc = (gitIndex, commandIndex) => {
+    const { local_path: cwd, branch_name: branch, git_name: name } = taskGits[gitIndex]
+    if (!cwd) {
+      sendFailLog(`请先前往个人设置设置${name}的本地路径`)
+      checkoutBranch(++gitIndex)
+      return
+    }
+    const { commandFunc, successFunc, failedFunc } = gitCommands[commandIndex]
+    const command = commandFunc({ branch })
+    sendSuccessLog(`执行命令: ${command}`)
+    exec(
+      command,
+      {
+        cwd
+      },
+      (error, stdout, stderr) => {
+        if (error) {
+          console.error(`exec error: ${error}`)
+          if (failedFunc) {
+            failedFunc(gitIndex, commandIndex, command)
+          } else {
+            sendFailLog(`${error}`)
+            checkoutBranch(++gitIndex)
+          }
+          return
+        }
+        console.log(`stdout: ${stdout}`)
+        console.error(`stderr: ${stderr}`)
+        successFunc && successFunc(gitIndex, commandIndex, stdout)
+      }
+    )
+  }
+  const checkoutBranch = (gitIndex) => {
+    console.log('taskGits', gitIndex, taskGits.length)
+    sendProcessLog(gitIndex, taskGits.length)
+    if (gitIndex === taskGits.length) {
+      console.log('aaa', switchActionRes)
+      return '结束'
+    }
+    const { git_name: name } = taskGits[gitIndex]
+    gitIndex > 0 && sendSuccessLog('\n')
+    sendSuccessLog(`仓库名: ${name}`)
+    return execFunc(gitIndex, 0)
+  }
+
+  checkoutBranch(0)
+}
+
 export async function handleSwitchTask(_e: IpcMainInvokeEvent, taskGits) {
   const currentWindow = BrowserWindow.getFocusedWindow()
   // 仓库切换分支的结果

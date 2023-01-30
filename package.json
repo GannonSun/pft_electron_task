@@ -1,9 +1,9 @@
 {
-  "name": "electron-app",
+  "name": "pft_task_manage",
   "version": "1.0.0",
-  "description": "An Electron application with Vue and TypeScript",
+  "description": "任务管理工具",
   "main": "./out/main/index.js",
-  "author": "example.com",
+  "author": "gannonsun",
   "homepage": "https://www.electronjs.org",
   "scripts": {
     "format": "prettier --write .",

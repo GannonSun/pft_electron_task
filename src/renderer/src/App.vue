@@ -41,4 +41,15 @@ p {
 .fade-leave-to {
   opacity: 0;
 }
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 8px;
+  background-color: transparent; // #f5f5f5;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background-color: #c1c1c1;
+}
 </style>
