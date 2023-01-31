@@ -2,7 +2,7 @@
   <el-dialog
     class="logsDialog"
     v-model="visible"
-    title="切换任务中..."
+    :title="dialogTitle"
     :close-on-click-modal="false"
     width="60%"
     center
@@ -48,6 +48,9 @@ const visible = computed({
     precent.value = 0
     logsArr.value = []
   }
+})
+const dialogTitle = computed(() => {
+  return precent.value === 100 ? '执行完成' : '执行命令中...'
 })
 const hasError = computed(() => {
   return logsArr.value.some((log) => log.code == 500)

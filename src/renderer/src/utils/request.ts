@@ -70,7 +70,11 @@ const handleNetworkError = (errStatus?: number): void => {
   //   message.error('无法连接到服务器！')
 }
 
-axios.interceptors.request.use((config) => {
+const axiosIns = axios.create({
+  baseURL: 'http://118.25.4.192:7003'
+})
+
+axiosIns.interceptors.request.use((config) => {
   if (needLoadingRequestCount === 0) {
     loadingInstance = ElLoading.service({
       lock: true,
@@ -84,7 +88,7 @@ axios.interceptors.request.use((config) => {
   return config
 })
 
-axios.interceptors.response.use(
+axiosIns.interceptors.response.use(
   (response) => {
     needLoadingRequestCount--
     if (needLoadingRequestCount === 0) {
@@ -110,7 +114,7 @@ export const Get = <T>(
   clearFn?: Fn
 ): Promise<[any, FcResponse<T> | undefined]> =>
   new Promise((resolve) => {
-    axios
+    axiosIns
       .get(url, { params })
       .then((result) => {
         let res: FcResponse<T>
@@ -132,7 +136,7 @@ export const Post = <T>(
   params: IAnyObj = {}
 ): Promise<[any, FcResponse<T> | undefined]> => {
   return new Promise((resolve) => {
-    axios
+    axiosIns
       .post(url, data, { params })
       .then((result) => {
         resolve([null, result.data as FcResponse<T>])

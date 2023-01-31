@@ -51,7 +51,7 @@
           class="formInput"
           v-model="ruleForm.remark"
           type="textarea"
-          :row="3"
+          :rows="3"
           placeholder="自定义备注，可填入Tapd链接"
         />
       </el-form-item>

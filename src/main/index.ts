@@ -1,8 +1,8 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, globalShortcut } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { handleOpenLink, handleDirectoryOpen, handleOperateGit, handleSwitchTask } from './task'
-import icon from '../../resources/task.ico?asset'
+import icon from '../../resources/icon.ico?asset'
 
 function createWindow(): void {
   // Create the browser window.
@@ -27,14 +27,14 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
-  // globalShortcut.register('CommandOrControl+F12', () => {
-  //   if (mainWindow.webContents.isDevToolsOpened()) {
-  //     mainWindow.webContents.closeDevTools()
-  //   } else {
-  //     mainWindow.webContents.openDevTools({ mode: 'right' })
-  //     console.log('Open dev tool...')
-  //   }
-  // })
+  globalShortcut.register('CommandOrControl+F12', () => {
+    if (mainWindow.webContents.isDevToolsOpened()) {
+      mainWindow.webContents.closeDevTools()
+    } else {
+      mainWindow.webContents.openDevTools({ mode: 'right' })
+      console.log('Open dev tool...')
+    }
+  })
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.

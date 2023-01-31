@@ -127,6 +127,7 @@ const handleGetTaskList = async (searchParams = {}) => {
   })
   if (!err && res?.code == 200) {
     if (page.value === 1) {
+      finished.value = false
       taskList.value = res.data
     } else {
       taskList.value.push(...res.data)
@@ -138,12 +139,14 @@ const handleGetTaskList = async (searchParams = {}) => {
 }
 const handleSeachTask = () => {
   page.value = 1
-  finished.value = false
+  // taskList.value = []
+  // finished.value = false
   handleGetTaskList()
 }
 const handleShowMyTask = (val) => {
   page.value = 1
-  finished.value = false
+  // taskList.value = []
+  // finished.value = false
   if (val) {
     handleGetTaskList({
       user_id: userStore.userId
@@ -172,7 +175,7 @@ const handleSwitchTask = () => {
       if (!err && res?.code == 200) {
         logsDialogVisible.value = true
         userStore.setUserInfo(res.data?.user_info ?? null)
-        window.electronAPI.switchTask(res.data?.task_gits ?? [])
+        window.electronAPI.operateGit(res.data?.task_gits ?? [], 'switch')
       }
     })
     .catch((e) => e)

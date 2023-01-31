@@ -14,7 +14,7 @@ export const signup = <T = { user_name: string; pass_word: string }>(params): Ap
 }
 
 export const login = <T = { user_name: string; pass_word: string }>(params): ApiResponse<T> => {
-  return Post<T>('/api/task/login', params)
+  return Post<T>('/task/login', params)
 }
 
 export const getSetting = <T = IgitSetting[]>(params): ApiResponse<T> => {
