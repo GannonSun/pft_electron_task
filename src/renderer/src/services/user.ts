@@ -10,17 +10,17 @@ export interface FcResponse<T> {
 export type ApiResponse<T> = Promise<[any, FcResponse<T> | undefined]>
 
 export const signup = <T = { user_name: string; pass_word: string }>(params): ApiResponse<T> => {
-  return Post<T>('/api/task/signup', params)
+  return Post<T>('/taskApi/task/signup', params)
 }
 
 export const login = <T = { user_name: string; pass_word: string }>(params): ApiResponse<T> => {
-  return Post<T>('/task/login', params)
+  return Post<T>('/taskApi/task/login', params)
 }
 
 export const getSetting = <T = IgitSetting[]>(params): ApiResponse<T> => {
-  return Post<T>('/api/task/getSetting', params)
+  return Post<T>('/taskApi/task/getSetting', params)
 }
 
 export const saveSetting = <T>(params): ApiResponse<T> => {
-  return Post<T>('/api/task/saveSetting', params)
+  return Post<T>('/taskApi/task/saveSetting', params)
 }

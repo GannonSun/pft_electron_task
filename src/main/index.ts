@@ -14,7 +14,8 @@ function createWindow(): void {
     icon,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      webSecurity: false
     }
   })
 
@@ -27,7 +28,7 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
-  globalShortcut.register('CommandOrControl+F12', () => {
+  globalShortcut.register('CommandOrControl+Shift+F12', () => {
     if (mainWindow.webContents.isDevToolsOpened()) {
       mainWindow.webContents.closeDevTools()
     } else {

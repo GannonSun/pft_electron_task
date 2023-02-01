@@ -25,7 +25,11 @@
               :value="item.git_id"
             />
           </el-select>
-          <el-input class="relatedInput" v-model="item.branch_name"></el-input>
+          <el-input
+            class="relatedInput"
+            v-model="item.branch_name"
+            placeholder="分支名称"
+          ></el-input>
           <div class="relatedAction">
             <el-button
               v-if="index === ruleForm.task_related.length - 1"

@@ -10,25 +10,25 @@ export interface FcResponse<T> {
 export type ApiResponse<T> = Promise<[any, FcResponse<T> | undefined]>
 
 export const getTaskList = <T = ItaskItem[]>(params): ApiResponse<T> => {
-  return Post<T>('/api/task/taskList', params)
+  return Post<T>('/taskApi/task/taskList', params)
 }
 
 export const addTask = <T>(params): ApiResponse<T> => {
-  return Post<T>('/api/task/addTask', params)
+  return Post<T>('/taskApi/task/addTask', params)
 }
 
 export const updateTask = <T>(params): ApiResponse<T> => {
-  return Post<T>('/api/task/updateTask', params)
+  return Post<T>('/taskApi/task/updateTask', params)
 }
 
 export const delTask = <T>(params): ApiResponse<T> => {
-  return Post<T>('/api/task/delTask', params)
+  return Post<T>('/taskApi/task/delTask', params)
 }
 
 export const getTaskDetailed = <T>(params): ApiResponse<T> => {
-  return Post<T>('/api/task/taskDetailed', params)
+  return Post<T>('/taskApi/task/taskDetailed', params)
 }
 
 export const switchTask = <T>(params): ApiResponse<T> => {
-  return Post<T>('/api/task/switchTask', params)
+  return Post<T>('/taskApi/task/switchTask', params)
 }

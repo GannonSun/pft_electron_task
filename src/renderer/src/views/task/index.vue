@@ -139,14 +139,10 @@ const handleGetTaskList = async (searchParams = {}) => {
 }
 const handleSeachTask = () => {
   page.value = 1
-  // taskList.value = []
-  // finished.value = false
   handleGetTaskList()
 }
 const handleShowMyTask = (val) => {
   page.value = 1
-  // taskList.value = []
-  // finished.value = false
   if (val) {
     handleGetTaskList({
       user_id: userStore.userId
@@ -199,6 +195,7 @@ const handleDelTask = () => {
       })
       if (!err && res?.code == 200) {
         ElMessage.success('删除成功')
+        page.value = 1
         activeTaskId.value = null
         taskDetailed.value = null
         handleGetTaskList()

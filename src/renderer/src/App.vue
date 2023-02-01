@@ -10,6 +10,20 @@
 
 <script setup lang="ts">
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+import { onMounted } from 'vue'
+import { useTaskStore } from '@renderer/store/task'
+
+const taskStore = useTaskStore()
+
+onMounted(async () => {
+  window.electronAPI.onUpdateSwitchLog((e, logObj) => {
+    if (logObj.code == 0) {
+      taskStore.setActionPrecent(Math.round((logObj.current / logObj.total) * 100))
+    } else {
+      taskStore.pushTaskLogs(logObj)
+    }
+  })
+})
 </script>
 
 <style lang="less">

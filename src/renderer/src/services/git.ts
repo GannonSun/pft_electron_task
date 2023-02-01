@@ -10,5 +10,5 @@ export interface FcResponse<T> {
 export type ApiResponse<T> = Promise<[any, FcResponse<T> | undefined]>
 
 export const getGitList = <T = IgitList[]>(): ApiResponse<T> => {
-  return Post<T>('/api/task/gitList', {})
+  return Post<T>('/taskApi/task/gitList', {})
 }

@@ -10,14 +10,14 @@
     <el-progress
       :text-inside="true"
       :stroke-width="24"
-      :percentage="precent"
+      :percentage="actionPrecent"
       :status="progressStatus"
     />
     <div class="logsContainer">
       <p
         class="logItem"
         :class="{ successLog: item.code == 200, failedLog: item.code != 200 }"
-        v-for="(item, index) in logsArr"
+        v-for="(item, index) in taskLogs"
         :key="index"
         v-html="item.msg"
       ></p>
@@ -26,7 +26,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive } from 'vue'
+import { computed, ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useTaskStore } from '@renderer/store/task'
+
+const taskStore = useTaskStore()
+const { taskLogs, actionPrecent } = storeToRefs(taskStore)
 
 const props = defineProps({
   modelValue: {
@@ -36,36 +41,23 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 
-let precent = ref<number>(0)
-let logsArr = ref([])
-
 const visible = computed({
   get() {
     return props.modelValue
   },
   set(value) {
     emit('update:modelValue', value)
-    precent.value = 0
-    logsArr.value = []
+    taskStore.$reset()
   }
 })
 const dialogTitle = computed(() => {
-  return precent.value === 100 ? '执行完成' : '执行命令中...'
+  return actionPrecent.value === 100 ? '执行完成' : '执行命令中...'
 })
 const hasError = computed(() => {
-  return logsArr.value.some((log) => log.code == 500)
+  return taskLogs.value.some((log) => log.code == 500)
 })
 const progressStatus = computed(() => {
   return hasError.value ? 'exception' : 'success'
-})
-
-window.electronAPI.onUpdateSwitchLog((e, logObj) => {
-  console.log('log', logObj)
-  if (logObj.code == 0) {
-    precent.value = Math.round((logObj.current / logObj.total) * 100)
-  } else {
-    logsArr.value.push(logObj)
-  }
 })
 </script>
 

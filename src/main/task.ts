@@ -49,6 +49,7 @@ export async function handleOperateGit(
   const currentWindow = BrowserWindow.getFocusedWindow()
 
   const sendSuccessLog = (log: string) => {
+    console.log(111, log)
     currentWindow?.webContents.send('update-switch-log', {
       code: 200,
       msg: log

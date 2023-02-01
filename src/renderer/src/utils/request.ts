@@ -71,7 +71,10 @@ const handleNetworkError = (errStatus?: number): void => {
 }
 
 const axiosIns = axios.create({
-  baseURL: 'http://118.25.4.192:7003'
+  baseURL:
+    window.electron.process.env?.NODE_ENV === 'development'
+      ? 'http://118.25.4.192'
+      : 'http://118.25.4.192'
 })
 
 axiosIns.interceptors.request.use((config) => {

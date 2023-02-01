@@ -29,12 +29,12 @@ export default defineConfig({
     ],
     server: {
       proxy: {
-        '/api': {
+        '/taskApi': {
           //要访问的跨域的域名
           target: 'http://118.25.4.192:7003', //线上环境
           // target: 'http://localhost:7003', //本地环境
           changeOrigin: true, //开启代理
-          rewrite: (path) => path.replace(/^\/api/, '')
+          rewrite: (path) => path.replace(/^\/taskApi/, '')
         }
       }
     }
