@@ -1,7 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain, globalShortcut } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { handleOpenLink, handleDirectoryOpen, handleOperateGit, handleSwitchTask } from './task'
+import { handleOpenLink, handleOpenCMD, handleOpenFileDir, handleDirectoryOpen, handleOperateGit } from './task'
 import icon from '../../resources/icon.ico?asset'
 
 function createWindow(): void {
@@ -61,9 +61,10 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('link:openLink', handleOpenLink)
+  ipcMain.handle('file:openFileDir', handleOpenFileDir)
+  ipcMain.handle('cmd:openCMD', handleOpenCMD)
   ipcMain.handle('dialog:openDirectory', handleDirectoryOpen)
   ipcMain.handle('task:operateGit', handleOperateGit)
-  ipcMain.handle('task:switchTask', handleSwitchTask)
 
   createWindow()
 

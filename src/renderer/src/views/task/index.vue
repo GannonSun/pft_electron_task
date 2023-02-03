@@ -57,16 +57,31 @@
         <div class="taskHeader">
           <p class="taskTitle">
             <span>{{ taskDetailed.task_name }}</span>
-            <el-icon class="copyIcon" title="复制任务分支信息" @click="handleCopyTaskInfo"
-              ><CopyDocument
-            /></el-icon>
+            <el-icon class="copyIcon" title="复制任务分支信息" @click="handleCopyTaskInfo">
+              <CopyDocument />
+            </el-icon>
           </p>
           <p v-if="taskDetailed.remark" class="taskRemark">备注：{{ taskDetailed.remark }}</p>
         </div>
         <div class="taskRelated">
           <div class="relatedItem" v-for="item in taskDetailed.task_related" :key="item.git_id">
-            <p>仓库名：{{ item.git_name }}</p>
-            <p>分支名：{{ item.branch_name }}</p>
+            <div class="relatedContent">
+              <p>
+                <span>仓库名：{{ item.git_name }}</span>
+                <el-icon size="20" title="打开目录" @click="handleOpenFileDir(item.local_path)">
+                  <FolderOpened />
+                </el-icon>
+              </p>
+              <p>分支名：{{ item.branch_name }}</p>
+            </div>
+            <div class="imgContent">
+              <img
+                class="cmdImg"
+                :src="CMDImg"
+                title="命令行模式"
+                @click="handleOpenCMD(item.local_path)"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -87,10 +102,11 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
 import { ElMessage, ElMessageBox, ElSwitch } from 'element-plus'
-import { Search, Flag, Plus, CopyDocument } from '@element-plus/icons-vue'
+import { Search, Flag, Plus, CopyDocument, FolderOpened } from '@element-plus/icons-vue'
 import { useUserStore } from '@renderer/store/user'
 import { ItaskItem } from '@renderer/interface/task'
 import { getTaskList, getTaskDetailed, delTask, switchTask } from '@renderer/services/task'
+import CMDImg from '@renderer/assets/CMD.png'
 import TaskDialog from './components/taskDialog.vue'
 import LogsDialog from './components/logsDialog.vue'
 
@@ -157,6 +173,14 @@ const handleClickTask = async (task) => {
   if (!err && res?.code == 200) {
     taskDetailed.value = res.data
   }
+}
+const handleOpenFileDir = (path: string) => {
+  if (!path) return ElMessage.warning('请先前往个人设置页面设置该仓库的本地路径')
+  window.electronAPI.openFileDir(path)
+}
+const handleOpenCMD = (path: string) => {
+  if (!path) return ElMessage.warning('请先前往个人设置页面设置该仓库的本地路径')
+  window.electronAPI.openCMD(path)
 }
 const handleSwitchTask = () => {
   ElMessageBox.confirm('您确定要切换该任务？', '温馨提示', {
@@ -344,11 +368,34 @@ const handleCopyTaskInfo = () => {
         gap: 12px;
 
         .relatedItem {
+          display: flex;
+          align-items: center;
+          // justify-content: space-between;
           width: 100%;
           // width: calc((100% - 32px * 2 - 12px) / 2);
           background: var(--el-color-success-light-9);
           padding: 16px;
           border-radius: 12px;
+
+          .relatedContent {
+            flex: 1;
+
+            p {
+              margin-bottom: 8px;
+              display: flex;
+              align-items: center;
+            }
+            .el-icon {
+              margin-left: 8px;
+              cursor: pointer;
+              color: var(--el-color-primary);
+            }
+          }
+          .cmdImg {
+            width: 32px;
+            margin-right: 12px;
+            cursor: pointer;
+          }
         }
       }
     }

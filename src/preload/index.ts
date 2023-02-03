@@ -3,10 +3,11 @@ import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
 const api = {
-  openLink: (url) => ipcRenderer.invoke('link:openLink', url),
+  openLink: (url: string) => ipcRenderer.invoke('link:openLink', url),
+  openFileDir: (path: string) => ipcRenderer.invoke('file:openFileDir', path),
+  openCMD: (path: string) => ipcRenderer.invoke('cmd:openCMD', path),
   openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
   operateGit: (gits, action) => ipcRenderer.invoke('task:operateGit', gits, action),
-  switchTask: (gits) => ipcRenderer.invoke('task:switchTask', gits),
   onUpdateSwitchLog: (callback) => ipcRenderer.on('update-switch-log', callback)
 }
 

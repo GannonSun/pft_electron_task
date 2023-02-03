@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { ElMessage, ElLoading } from 'element-plus'
+import { useUserStore } from '@renderer/store/user'
 
 type Fn = (data: FcResponse<any>) => unknown
 
@@ -13,6 +14,7 @@ interface FcResponse<T> {
   data: T
 }
 
+const userStore = useUserStore()
 let loadingInstance: any = null
 let needLoadingRequestCount: number = 0
 
@@ -33,6 +35,7 @@ const handleChangeRequestHeader = (config) => {
 
 const handleConfigureAuth = (config) => {
   // config.headers['x-csrf-token'] = getCookie('csrfToken') || ''
+  config.headers['User-Id'] = userStore.userId
   return config
 }
 
@@ -71,10 +74,7 @@ const handleNetworkError = (errStatus?: number): void => {
 }
 
 const axiosIns = axios.create({
-  baseURL:
-    window.electron.process.env?.NODE_ENV === 'development'
-      ? 'http://118.25.4.192'
-      : 'http://118.25.4.192'
+  baseURL: window.electron.process.env?.NODE_ENV === 'development' ? '' : 'http://118.25.4.192'
 })
 
 axiosIns.interceptors.request.use((config) => {
