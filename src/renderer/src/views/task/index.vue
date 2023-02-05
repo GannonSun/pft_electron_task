@@ -77,7 +77,7 @@
             <div class="imgContent">
               <img
                 class="cmdImg"
-                :src="CMDImg"
+                src="http://118.25.4.192:9001/cmd.png"
                 title="命令行模式"
                 @click="handleOpenCMD(item.local_path)"
               />
@@ -391,10 +391,12 @@ const handleCopyTaskInfo = () => {
               color: var(--el-color-primary);
             }
           }
-          .cmdImg {
-            width: 32px;
-            margin-right: 12px;
-            cursor: pointer;
+          .imgContent {
+            .cmdImg {
+              width: 32px;
+              margin-right: 12px;
+              cursor: pointer;
+            }
           }
         }
       }
