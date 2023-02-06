@@ -77,7 +77,7 @@
             <div class="imgContent">
               <img
                 class="cmdImg"
-                src="http://118.25.4.192:9001/cmd.png"
+                src="@renderer/assets/cmd.png"
                 title="命令行模式"
                 @click="handleOpenCMD(item.local_path)"
               />
@@ -106,7 +106,6 @@ import { Search, Flag, Plus, CopyDocument, FolderOpened } from '@element-plus/ic
 import { useUserStore } from '@renderer/store/user'
 import { ItaskItem } from '@renderer/interface/task'
 import { getTaskList, getTaskDetailed, delTask, switchTask } from '@renderer/services/task'
-import CMDImg from '@renderer/assets/CMD.png'
 import TaskDialog from './components/taskDialog.vue'
 import LogsDialog from './components/logsDialog.vue'
 
