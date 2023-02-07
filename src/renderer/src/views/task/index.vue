@@ -94,7 +94,7 @@
     v-model="taskDialogVisible"
     :action-type="actionType"
     :task-info="taskDetailed"
-    @refresh="handleSeachTask"
+    @refresh="handleRefreshTask"
   ></task-dialog>
   <logs-dialog v-model="logsDialogVisible"></logs-dialog>
 </template>
@@ -152,6 +152,19 @@ const handleGetTaskList = async (searchParams = {}) => {
     }
   }
 }
+const handleGetTaskDetailed = async () => {
+  const [err, res] = await getTaskDetailed({ id: activeTaskId.value })
+  if (!err && res?.code == 200) {
+    taskDetailed.value = res.data
+  }
+}
+const handleRefreshTask = () => {
+  page.value = 1
+  handleGetTaskList()
+  if (activeTaskId.value) {
+    handleGetTaskDetailed()
+  }
+}
 const handleSeachTask = () => {
   page.value = 1
   handleGetTaskList()
@@ -168,10 +181,7 @@ const handleShowMyTask = (val) => {
 }
 const handleClickTask = async (task) => {
   activeTaskId.value = task.task_id
-  const [err, res] = await getTaskDetailed({ id: task.task_id })
-  if (!err && res?.code == 200) {
-    taskDetailed.value = res.data
-  }
+  handleGetTaskDetailed()
 }
 const handleOpenFileDir = (path: string) => {
   if (!path) return ElMessage.warning('请先前往个人设置页面设置该仓库的本地路径')
