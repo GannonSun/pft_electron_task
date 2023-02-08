@@ -390,9 +390,12 @@ const handleCopyTaskInfo = () => {
             flex: 1;
 
             p {
-              margin-bottom: 8px;
               display: flex;
               align-items: center;
+
+              & + p {
+                margin-top: 8px;
+              }
             }
             .el-icon {
               margin-left: 8px;

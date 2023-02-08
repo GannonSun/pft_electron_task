@@ -141,7 +141,7 @@ watch(
     if (newVal) {
       if (props.actionType === 'edit' && props.taskInfo) {
         ruleForm.task_name = props.taskInfo.task_name
-        ruleForm.task_related = props.taskInfo.task_related
+        ruleForm.task_related = JSON.parse(JSON.stringify(props.taskInfo.task_related))
         ruleForm.remark = props.taskInfo.remark
       }
     } else {
