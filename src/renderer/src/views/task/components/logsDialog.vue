@@ -13,7 +13,7 @@
       :percentage="actionPrecent"
       :status="progressStatus"
     />
-    <div class="logsContainer">
+    <div class="logsContainer" ref="logContainerRef">
       <p
         class="logItem"
         :class="{ successLog: item.code == 200, failedLog: item.code != 200 }"
@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, watch, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useTaskStore } from '@renderer/store/task'
 
@@ -40,6 +40,8 @@ const props = defineProps({
   }
 })
 const emit = defineEmits(['update:modelValue'])
+
+const logContainerRef = ref<HTMLElement>(null)
 
 const visible = computed({
   get() {
@@ -59,6 +61,23 @@ const hasError = computed(() => {
 const progressStatus = computed(() => {
   return hasError.value ? 'exception' : 'success'
 })
+
+watch(
+  taskLogs,
+  () => {
+    if (logContainerRef.value) {
+      logContainerRef.value.scrollTop = logContainerRef.value.scrollHeight
+    }
+  },
+  {
+    deep: true
+  }
+)
+watch(actionPrecent, () => {
+  if (logContainerRef.value) {
+    logContainerRef.value.scrollTop = logContainerRef.value.scrollHeight + 32
+  }
+})
 </script>
 
 <style lang="less" scoped>
@@ -66,7 +85,7 @@ const progressStatus = computed(() => {
   .logsContainer {
     margin: 16px 0;
     padding: 0 16px;
-    max-height: 200px;
+    max-height: 400px;
     overflow-y: auto;
 
     .logItem {
