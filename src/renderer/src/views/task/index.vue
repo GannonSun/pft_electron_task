@@ -1,52 +1,54 @@
 <template>
   <el-container class="taskContainer">
-    <el-aside width="300px">
-      <div class="filterCom">
-        <div class="searchCom">
-          <el-input v-model="keyWord" placeholder="输入任务关键词搜索" :prefix-icon="Search" />
-          <el-button type="primary" plain @click="handleSeachTask">搜索</el-button>
+    <resize-wrap class="resizeAside" default-width="300px">
+      <el-aside>
+        <div class="filterCom">
+          <div class="searchCom">
+            <el-input v-model="keyWord" placeholder="输入任务关键词搜索" :prefix-icon="Search" />
+            <el-button type="primary" plain @click="handleSeachTask">搜索</el-button>
+          </div>
+          <div class="switchCom">
+            <el-switch v-model="onlyMe" size="small" @change="handleShowMyTask"></el-switch>
+            <span :class="{ activeText: onlyMe }">仅显示我的任务</span>
+          </div>
         </div>
-        <div class="switchCom">
-          <el-switch v-model="onlyMe" size="small" @change="handleShowMyTask"></el-switch>
-          <span :class="{ activeText: onlyMe }">仅显示我的任务</span>
-        </div>
-      </div>
-      <div
-        class="listContainer"
-        v-infinite-scroll="handleChangePage"
-        :infinite-scroll-delay="500"
-        :infinite-scroll-disabled="finished"
-      >
         <div
-          class="taskItem"
-          :class="{
-            activeTaskItem: item.task_id === activeTaskId
-          }"
-          v-for="item in taskList"
-          :key="item.task_id"
-          @click="handleClickTask(item)"
+          class="listContainer"
+          v-infinite-scroll="handleChangePage"
+          :infinite-scroll-delay="500"
+          :infinite-scroll-disabled="finished"
         >
-          <div class="lt">
-            <p class="title">{{ item.task_name }}</p>
-            <p class="subTitle">{{ item.user_name }}</p>
+          <div
+            class="taskItem"
+            :class="{
+              activeTaskItem: item.task_id === activeTaskId
+            }"
+            v-for="item in taskList"
+            :key="item.task_id"
+            @click="handleClickTask(item)"
+          >
+            <div class="lt">
+              <p class="title">{{ item.task_name }}</p>
+              <p class="subTitle">{{ item.user_name }}</p>
+            </div>
+            <div v-if="item.task_id === userStore.taskId" class="rt">
+              <el-icon color="#e6a23c" size="20"><Flag /></el-icon>
+            </div>
           </div>
-          <div v-if="item.task_id === userStore.taskId" class="rt">
-            <el-icon color="#e6a23c" size="20"><Flag /></el-icon>
-          </div>
+          <div v-if="!taskList.length" class="emptyContainer">暂无数据</div>
         </div>
-        <div v-if="!taskList.length" class="emptyContainer">暂无数据</div>
-      </div>
-      <div class="actionCom">
-        <el-button
-          type="warning"
-          :icon="Plus"
-          circle
-          size="small"
-          title="添加任务"
-          @click="handleAddTask"
-        ></el-button>
-      </div>
-    </el-aside>
+        <div class="actionCom">
+          <el-button
+            type="warning"
+            :icon="Plus"
+            circle
+            size="small"
+            title="添加任务"
+            @click="handleAddTask"
+          ></el-button>
+        </div>
+      </el-aside>
+    </resize-wrap>
     <el-main class="mainContainer">
       <div v-if="taskDetailed" class="taskMain">
         <div class="taskAction">
@@ -250,10 +252,17 @@ const handleCopyTaskInfo = () => {
   background: #fafafa;
   height: 100%;
 
+  .resizeAside {
+    margin-right: 8px;
+    min-width: 200px;
+    max-width: 50%;
+    flex-shrink: 0;
+  }
   .el-aside {
     position: relative;
     background: #fff;
-    margin-right: 16px;
+    width: 100%;
+    height: 100%;
 
     .filterCom {
       .searchCom {
