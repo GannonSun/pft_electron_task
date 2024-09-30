@@ -1,52 +1,54 @@
 <template>
   <el-container class="taskContainer">
-    <el-aside width="300px">
-      <div class="filterCom">
-        <div class="searchCom">
-          <el-input v-model="keyWord" placeholder="输入任务关键词搜索" :prefix-icon="Search" />
-          <el-button type="primary" plain @click="handleSeachTask">搜索</el-button>
+    <resize-wrap class="resizeAside" default-width="300px">
+      <el-aside>
+        <div class="filterCom">
+          <div class="searchCom">
+            <el-input v-model="keyWord" placeholder="输入任务关键词搜索" :prefix-icon="Search" />
+            <el-button type="primary" plain @click="handleSeachTask">搜索</el-button>
+          </div>
+          <div class="switchCom">
+            <el-switch v-model="onlyMe" size="small" @change="handleShowMyTask"></el-switch>
+            <span :class="{ activeText: onlyMe }">仅显示我的任务</span>
+          </div>
         </div>
-        <div class="switchCom">
-          <el-switch v-model="onlyMe" size="small" @change="handleShowMyTask"></el-switch>
-          <span :class="{ activeText: onlyMe }">仅显示我的任务</span>
-        </div>
-      </div>
-      <div
-        class="listContainer"
-        v-infinite-scroll="handleChangePage"
-        :infinite-scroll-delay="500"
-        :infinite-scroll-disabled="finished"
-      >
         <div
-          class="taskItem"
-          :class="{
-            activeTaskItem: item.task_id === activeTaskId
-          }"
-          v-for="item in taskList"
-          :key="item.task_id"
-          @click="handleClickTask(item)"
+          class="listContainer"
+          v-infinite-scroll="handleChangePage"
+          :infinite-scroll-delay="500"
+          :infinite-scroll-disabled="finished"
         >
-          <div class="lt">
-            <p class="title">{{ item.task_name }}</p>
-            <p class="subTitle">{{ item.user_name }}</p>
+          <div
+            class="taskItem"
+            :class="{
+              activeTaskItem: item.task_id === activeTaskId
+            }"
+            v-for="item in taskList"
+            :key="item.task_id"
+            @click="handleClickTask(item)"
+          >
+            <div class="lt">
+              <p class="title">{{ item.task_name }}</p>
+              <p class="subTitle">{{ item.user_name }}</p>
+            </div>
+            <div v-if="item.task_id === userStore.taskId" class="rt">
+              <el-icon color="#e6a23c" size="20"><Flag /></el-icon>
+            </div>
           </div>
-          <div v-if="item.task_id === userStore.taskId" class="rt">
-            <el-icon color="#e6a23c" size="20"><Flag /></el-icon>
-          </div>
+          <div v-if="!taskList.length" class="emptyContainer">暂无数据</div>
         </div>
-        <div v-if="!taskList.length" class="emptyContainer">暂无数据</div>
-      </div>
-      <div class="actionCom">
-        <el-button
-          type="warning"
-          :icon="Plus"
-          circle
-          size="small"
-          title="添加任务"
-          @click="handleAddTask"
-        ></el-button>
-      </div>
-    </el-aside>
+        <div class="actionCom">
+          <el-button
+            type="warning"
+            :icon="Plus"
+            circle
+            size="small"
+            title="添加任务"
+            @click="handleAddTask"
+          ></el-button>
+        </div>
+      </el-aside>
+    </resize-wrap>
     <el-main class="mainContainer">
       <div v-if="taskDetailed" class="taskMain">
         <div class="taskAction">
@@ -77,7 +79,7 @@
             <div class="imgContent">
               <img
                 class="cmdImg"
-                src="http://118.25.4.192:9001/cmd.png"
+                src="@renderer/assets/cmd.png"
                 title="命令行模式"
                 @click="handleOpenCMD(item.local_path)"
               />
@@ -94,7 +96,7 @@
     v-model="taskDialogVisible"
     :action-type="actionType"
     :task-info="taskDetailed"
-    @refresh="handleSeachTask"
+    @refresh="handleRefreshTask"
   ></task-dialog>
   <logs-dialog v-model="logsDialogVisible"></logs-dialog>
 </template>
@@ -106,7 +108,6 @@ import { Search, Flag, Plus, CopyDocument, FolderOpened } from '@element-plus/ic
 import { useUserStore } from '@renderer/store/user'
 import { ItaskItem } from '@renderer/interface/task'
 import { getTaskList, getTaskDetailed, delTask, switchTask } from '@renderer/services/task'
-import CMDImg from '@renderer/assets/CMD.png'
 import TaskDialog from './components/taskDialog.vue'
 import LogsDialog from './components/logsDialog.vue'
 
@@ -153,6 +154,19 @@ const handleGetTaskList = async (searchParams = {}) => {
     }
   }
 }
+const handleGetTaskDetailed = async () => {
+  const [err, res] = await getTaskDetailed({ id: activeTaskId.value })
+  if (!err && res?.code == 200) {
+    taskDetailed.value = res.data
+  }
+}
+const handleRefreshTask = () => {
+  page.value = 1
+  handleGetTaskList()
+  if (activeTaskId.value) {
+    handleGetTaskDetailed()
+  }
+}
 const handleSeachTask = () => {
   page.value = 1
   handleGetTaskList()
@@ -169,10 +183,7 @@ const handleShowMyTask = (val) => {
 }
 const handleClickTask = async (task) => {
   activeTaskId.value = task.task_id
-  const [err, res] = await getTaskDetailed({ id: task.task_id })
-  if (!err && res?.code == 200) {
-    taskDetailed.value = res.data
-  }
+  handleGetTaskDetailed()
 }
 const handleOpenFileDir = (path: string) => {
   if (!path) return ElMessage.warning('请先前往个人设置页面设置该仓库的本地路径')
@@ -241,10 +252,17 @@ const handleCopyTaskInfo = () => {
   background: #fafafa;
   height: 100%;
 
+  .resizeAside {
+    margin-right: 8px;
+    min-width: 200px;
+    max-width: 50%;
+    flex-shrink: 0;
+  }
   .el-aside {
     position: relative;
     background: #fff;
-    margin-right: 16px;
+    width: 100%;
+    height: 100%;
 
     .filterCom {
       .searchCom {
@@ -381,9 +399,12 @@ const handleCopyTaskInfo = () => {
             flex: 1;
 
             p {
-              margin-bottom: 8px;
               display: flex;
               align-items: center;
+
+              & + p {
+                margin-top: 8px;
+              }
             }
             .el-icon {
               margin-left: 8px;

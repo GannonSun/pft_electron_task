@@ -77,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, reactive, ref, onMounted } from 'vue'
+import { computed, watch, reactive, ref, onMounted, nextTick } from 'vue'
 import { ElMessage, FormInstance, FormRules } from 'element-plus'
 import { Plus, Minus } from '@element-plus/icons-vue'
 import { useUserStore } from '@renderer/store/user'
@@ -140,9 +140,11 @@ watch(
   (newVal, oldVal) => {
     if (newVal) {
       if (props.actionType === 'edit' && props.taskInfo) {
-        ruleForm.task_name = props.taskInfo.task_name
-        ruleForm.task_related = props.taskInfo.task_related
-        ruleForm.remark = props.taskInfo.remark
+        nextTick(() => {
+          ruleForm.task_name = props.taskInfo.task_name
+          ruleForm.task_related = JSON.parse(JSON.stringify(props.taskInfo.task_related))
+          ruleForm.remark = props.taskInfo.remark
+        })
       }
     } else {
       ruleFormRef && ruleFormRef.value.resetFields()
