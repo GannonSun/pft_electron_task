@@ -54,12 +54,13 @@ export async function handleDirectoryOpen() {
 export async function handleOperateGit(
   _e: IpcMainInvokeEvent,
   taskGits: ItaskGits[],
-  action: ActionNames
+  action: ActionNames,
+  defaultGitIndex: number = 0
 ) {
   const currentWindow = BrowserWindow.getFocusedWindow()
 
   const sendSuccessLog = (log: string) => {
-    console.log(111, log)
+    console.log('success', log)
     currentWindow?.webContents.send('update-switch-log', {
       code: 200,
       msg: log
@@ -120,6 +121,7 @@ export async function handleOperateGit(
       }
     }
   ]
+  // 切换任务同步切换分支操作
   const switchCommands: Array<Icommand> = [
     {
       commandFunc: () => 'git status -s', // 检测仓库是否有未提交的文件或者有新增的未跟踪的新文件
@@ -163,10 +165,78 @@ export async function handleOperateGit(
       }
     }
   ]
+  // 一键合并master到当前分支
+  const mergeCommands: Array<Icommand> = [
+    {
+      commandFunc: () => 'git status -s', // 检测仓库是否有未提交的文件或者有新增的未跟踪的新文件
+      successFunc: (gitIndex, commandIndex, output) => {
+        if (!output) {
+          // 无未提交的文件，则执行同仓库的下一个命令 git checkout xxx
+          sendSuccessLog('当前所在分支无需暂存的文件')
+          execFunc(gitIndex, ++commandIndex)
+        } else {
+          // 有未提交的文件，则中断同仓库的后续命令，进行下一个仓库的切换分支操作
+          const { git_name: name } = taskGits[gitIndex]
+          sendFailLog(`${name}当前分支有未提交的文件，请先前往确认`)
+          execGitAction(++gitIndex)
+        }
+      }
+    },
+    {
+      commandFunc: () => 'git checkout master',
+      successFunc: (gitIndex, commandIndex) => {
+        // 先切换到master在创建新分支
+        sendSuccessLog('成功切换到master，准备拉取最新代码...')
+        execFunc(gitIndex, ++commandIndex)
+      }
+    },
+    {
+      commandFunc: () => 'git pull',
+      successFunc: (gitIndex, commandIndex) => {
+        sendSuccessLog('master拉取最新代码成功')
+        execFunc(gitIndex, ++commandIndex)
+      }
+    },
+    {
+      commandFunc: ({ branch }) => `git checkout ${branch}`,
+      successFunc: (gitIndex, commandIndex) => {
+        // 切换成功说明本地存在分支，直接执行pull
+        sendSuccessLog('已切换到当前任务分支，准备合并master')
+        execFunc(gitIndex, commandIndex + 2)
+      },
+      failedFunc: (gitIndex, commandIndex) => {
+        // 切换失败说明没有本地分支或者远程分支名填写错误，执行git checkout -b xxx手动创建
+        sendFailLog('本地分支不存在，稍后将为您创建...')
+        execFunc(gitIndex, ++commandIndex)
+      }
+    },
+    {
+      commandFunc: ({ branch }) => `git checkout -b ${branch} origin/${branch}`,
+      successFunc: (gitIndex, commandIndex) => {
+        sendSuccessLog('成功创建本地分支')
+        execFunc(gitIndex, ++commandIndex)
+      }
+    },
+    // {
+    //   commandFunc: () => 'git pull',
+    //   successFunc: (gitIndex, commandIndex) => {
+    //     sendSuccessLog('更新成功')
+    //     execFunc(gitIndex, ++commandIndex)
+    //   }
+    // },
+    {
+      commandFunc: () => 'git merge --no-ff master',
+      successFunc: (gitIndex) => {
+        sendSuccessLog('合并master到当前分支成功，请检查是否有冲突')
+        execGitAction(++gitIndex)
+      }
+    },
+  ]
   // 字典
   const gitCommandsMap = {
     created: createdCommands,
-    switch: switchCommands
+    switch: switchCommands,
+    merge: mergeCommands
   }
   // 根据action类型选择对应的shell操作
   const gitCommands: Array<Icommand> = gitCommandsMap[action] || []
@@ -215,5 +285,5 @@ export async function handleOperateGit(
     return execFunc(gitIndex, 0)
   }
 
-  execGitAction(0)
+  execGitAction(defaultGitIndex)
 }

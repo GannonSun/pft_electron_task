@@ -66,7 +66,7 @@
           <p v-if="taskDetailed.remark" class="taskRemark">备注：{{ taskDetailed.remark }}</p>
         </div>
         <div class="taskRelated">
-          <div class="relatedItem" v-for="item in taskDetailed.task_related" :key="item.git_id">
+          <div class="relatedItem" v-for="(item, index) in taskDetailed.task_related" :key="item.git_id">
             <div class="relatedContent">
               <p>
                 <span>仓库名：{{ item.git_name }}</span>
@@ -82,6 +82,12 @@
                 src="@renderer/assets/cmd.png"
                 title="命令行模式"
                 @click="handleOpenCMD(item.local_path)"
+              />
+              <img
+                class="cmdImg"
+                src="@renderer/assets/merge.png"
+                title="合并master"
+                @click="handleMergeMaster(item, index)"
               />
             </div>
           </div>
@@ -192,6 +198,10 @@ const handleOpenFileDir = (path: string) => {
 const handleOpenCMD = (path: string) => {
   if (!path) return ElMessage.warning('请先前往个人设置页面设置该仓库的本地路径')
   window.electronAPI.openCMD(path)
+}
+const handleMergeMaster = (taskGit: any, index: number) => {
+  logsDialogVisible.value = true
+  window.electronAPI.operateGit([JSON.parse(JSON.stringify(taskGit))], 'merge')
 }
 const handleSwitchTask = () => {
   ElMessageBox.confirm('您确定要切换该任务？', '温馨提示', {
