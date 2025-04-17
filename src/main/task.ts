@@ -200,7 +200,7 @@ export async function handleOperateGit(
     {
       commandFunc: ({ branch }) => `git checkout ${branch}`,
       successFunc: (gitIndex, commandIndex) => {
-        // 切换成功说明本地存在分支，直接执行pull
+        // 切换成功说明本地存在分支，直接执行merge
         sendSuccessLog('已切换到当前任务分支，准备合并master')
         execFunc(gitIndex, commandIndex + 2)
       },
@@ -217,13 +217,6 @@ export async function handleOperateGit(
         execFunc(gitIndex, ++commandIndex)
       }
     },
-    // {
-    //   commandFunc: () => 'git pull',
-    //   successFunc: (gitIndex, commandIndex) => {
-    //     sendSuccessLog('更新成功')
-    //     execFunc(gitIndex, ++commandIndex)
-    //   }
-    // },
     {
       commandFunc: () => 'git merge --no-ff master',
       successFunc: (gitIndex) => {
